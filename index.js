@@ -5,7 +5,7 @@ mongoose.connect(process.env.MONGO_URI)
 .catch(err => console.error('MongoDB connection error:', err));
 const express = require('express');
 const { graphqlHTTP } = require('express-graphql');
-const schema = require('./schema/schema'); // Assuming you have a schema.js file
+const schema = require('./schema/index'); // Assuming you have a schema.js file
 
 const app = express();
 app.use('/graphql', graphqlHTTP({
