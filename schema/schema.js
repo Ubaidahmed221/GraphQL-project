@@ -1,4 +1,4 @@
-const {GraphiQL, GraphQLObjectType, GraphQLSchema, GraphQLString, graphql, GraphQLInt, GraphQLList} = require('graphql');
+const {GraphiQL, GraphQLObjectType, GraphQLSchema, GraphQLString, graphql, GraphQLInt, GraphQLList, GraphQLInputObjectType, GraphQLNonNull} = require('graphql');
  const User = require("../models/user");
 
  const userType = new GraphQLObjectType({
@@ -8,6 +8,14 @@ const {GraphiQL, GraphQLObjectType, GraphQLSchema, GraphQLString, graphql, Graph
         name: { type: GraphQLString },
         age: { type: GraphQLInt },
 
+    }
+});
+
+const UserInputType = new GraphQLInputObjectType({
+    name: "userInput",
+    fields: {
+        name: { type: new GraphQLNonNull(GraphQLString) },
+        age: { type: GraphQLInt },
     }
 });
 
@@ -36,15 +44,17 @@ const Mutation =  new GraphQLObjectType({
     fields:{
         addUser:{
             type: userType,
-            args:{
-                name:{type: GraphQLString},
-                age:{type: GraphQLInt},
+        args: {
+            input: { type: UserInputType }
+        },
+         async   resolve(_,{ input }) {
+            if(!input.name || input.name.length < 3) {
+                throw new Error("Name must be at least 3 characters long");
 
-            },
-         async   resolve(parent, args) {
+            }
              const user = new User({
-                name: args.name,
-                age: args.age
+                name: input.name,
+                age: input.age
               }); // Save new user to the database
           return  await  user.save();
             }
