@@ -1,7 +1,8 @@
- const {GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLSchema} = require("graphql");
+ const {GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLSchema, GraphQLInt} = require("graphql");
 
 const BookType = require("../types/BookType");
 const AuthorType = require("../types/AuthorType");
+const BookPaginationType = require("../types/BookPaginationType");
 const Auther = require("../models/Author");
 const Book = require("../models/Book");
 const author = require("../models/Author");
@@ -48,9 +49,28 @@ const RootQuery = new GraphQLObjectType({
             }
         },
         books: {
-            type: new GraphQLList(BookType),
-            resolve(parent, args) {
-                return Book.find(); // Fetch all books from the database
+            type: BookPaginationType,
+            args: {
+                page: {type: GraphQLInt},
+                authorId: {type: GraphQLID}
+            },
+         async   resolve(parent, args) {
+                const limit = 2; // Number of books per page
+                const page = args.page || 1; // Default to page 1
+                const offset = (page - 1) * limit; // Calculate offset for pagination
+                const filter = {};
+                if(args.authorId) filter.authorId = args.authorId; // Filter by author ID if provided
+                const totalCount = await Book.countDocuments(filter); // Get total count of books
+                const totalPages = Math.ceil(totalCount / limit); // Calculate total pages
+                
+                const books = await Book.find(filter).skip(offset).limit(limit); // Fetch all books from the database
+                return {
+                    books: books,
+                    totalPages: totalPages,
+                    currentPage: page,
+                    hasNextPage: page < totalPages ? "true" : "false",
+                    hasPreviousPage: page > 1 ? "true" : "false"
+                };
             }
         },
     }
