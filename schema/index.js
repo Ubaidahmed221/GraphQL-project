@@ -1,11 +1,13 @@
- const {GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLSchema, GraphQLInt} = require("graphql");
+ const {GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList, GraphQLSchema, GraphQLInt, GraphQLNonNull} = require("graphql");
 
 const BookType = require("../types/BookType");
 const AuthorType = require("../types/AuthorType");
 const BookPaginationType = require("../types/BookPaginationType");
 const Auther = require("../models/Author");
 const Book = require("../models/Book");
+const Category = require("../models/Category");
 const author = require("../models/Author");
+const CategoryType = require("../types/CategoryType");
 
  const Mutation = new GraphQLObjectType({
     name: "Mutation",
@@ -26,14 +28,28 @@ const author = require("../models/Author");
             type: BookType,
             args: {
                 title: { type: GraphQLString },
-                authorId: { type: GraphQLID }
+                authorId: { type: GraphQLID },
+                CategoryIds: { type: new GraphQLList(GraphQLID) } // Allow multiple category IDs
             },
             resolve(parent, args) {
                 const book = new Book({
                     title: args.title,
-                    authorId: args.authorId
+                    authorId: args.authorId,
+                    CategoryIds: args.CategoryIds // Set the category IDs
                 });
                 return book.save();
+            }
+        },
+        addCategory: {
+            type: CategoryType,
+            args: {
+                name: { type: new GraphQLNonNull(GraphQLString) } // Make name required  
+            },
+            resolve(parent, args) {
+                const category = new Category({
+                    name: args.name
+                });
+                return category.save();
             }
         }
     }
@@ -73,6 +89,19 @@ const RootQuery = new GraphQLObjectType({
                 };
             }
         },
+        category:{
+            type: CategoryType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args) {
+                return Category.findById(args.id); // Fetch category by ID
+            }
+        },
+          categories:{
+            type: new GraphQLList(CategoryType),
+            resolve(parent, args) {
+                return Category.find(); // Fetch category by ID
+            }
+        }
     }
 });
 
