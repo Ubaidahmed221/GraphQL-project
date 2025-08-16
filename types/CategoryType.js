@@ -1,6 +1,7 @@
  const {GraphQLObjectType, GraphQLID, GraphQLString, GraphQLList} = require("graphql");
 
  const Book = require("../models/Book");
+    const Category = require("../models/Category");
 
 const CategoryType = new GraphQLObjectType({
     name: "Category",
@@ -14,7 +15,19 @@ const CategoryType = new GraphQLObjectType({
             async resolve(parent, args) {
                 return Book.find({ CategoryIds: parent.id }); // Fetch books by category ID
             }
-       } 
+       },
+       parentCategory: {
+            type: CategoryType,
+            resolve(parent, args) {
+             return  parent.parentCategory ? Category.findById(parent.parentCategory) : null; // Fetch parent category if exists
+            }
+        },
+        subcategories: {
+            type: new GraphQLList(CategoryType),
+            resolve(parent, args) {
+                return Category.find({ parentCategory: parent.id }); // Fetch subcategories by parent category ID
+            }
+        } 
     }}
  });
 

@@ -43,11 +43,13 @@ const CategoryType = require("../types/CategoryType");
         addCategory: {
             type: CategoryType,
             args: {
-                name: { type: new GraphQLNonNull(GraphQLString) } // Make name required  
+                name: { type: new GraphQLNonNull(GraphQLString) }, // Make name required
+                parentCategory: { type: GraphQLID } // Optional parent category ID
             },
             resolve(parent, args) {
                 const category = new Category({
-                    name: args.name
+                    name: args.name,
+                    parentCategory: args.parentCategory ? args.parentCategory : null // Set parent category if provided
                 });
                 return category.save();
             }
