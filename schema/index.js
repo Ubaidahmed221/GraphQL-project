@@ -8,6 +8,12 @@ const Book = require("../models/Book");
 const Category = require("../models/Category");
 const author = require("../models/Author");
 const CategoryType = require("../types/CategoryType");
+const Post = require("../models/Post");
+const PostType = require("../types/PostType");
+const Comment = require("../models/Comment");
+const CommentType = require("../types/CommentType");
+const Vedio = require("../models/Vedio");
+const VedioType = require("../types/VedioType");
 
  const Mutation = new GraphQLObjectType({
     name: "Mutation",
@@ -52,6 +58,54 @@ const CategoryType = require("../types/CategoryType");
                     parentCategory: args.parentCategory ? args.parentCategory : null // Set parent category if provided
                 });
                 return category.save();
+            }
+        },
+
+        addPost: {
+            type: PostType,
+            args: {
+                title: { type: new  GraphQLNonNull(GraphQLString) },
+                content: { type: GraphQLString }
+            },
+            resolve(parent, args) {
+                const post = new Post({
+                    title: args.title,
+                    content: args.content
+                });
+                return post.save();
+            }
+        },
+
+        addComment: {
+            type: CommentType,
+            args: {
+                content: { type: new  GraphQLNonNull(GraphQLString) },
+                commenttableId: { type: new  GraphQLNonNull(GraphQLString) }, // ID of the post or video being commented on
+                commentableType:  { type: new  GraphQLNonNull(GraphQLString) } // Type of the commentable entity (e.g., Post, Video)
+            },
+            resolve(parent, args) {
+                const comment = new Comment({
+                    content: args.content,
+                    commenttableId: args.commenttableId,
+                    commentableType: args.commentableType // Set the type of the commentable entity
+                });
+                return comment.save();
+            }
+        },
+
+        addVedio: {
+            type: VedioType,
+            args: {
+               title: { type: new  GraphQLNonNull(GraphQLString) },
+
+                url: { type: GraphQLString }
+            },
+            resolve(parent, args) {
+                const vedio = new Vedio({
+                    title: args.title,
+                    url: args.url
+                });
+                return vedio.save();
             }
         }
     }
@@ -102,6 +156,24 @@ const RootQuery = new GraphQLObjectType({
             type: new GraphQLList(CategoryType),
             resolve(parent, args) {
                 return Category.find(); // Fetch category by ID
+            }
+        },
+        posts: {
+            type: new GraphQLList(PostType),
+            resolve(parent, args) {
+                return Post.find(); // Fetch all posts from the database
+            }
+        },
+        comments: {
+            type: new GraphQLList(CommentType),
+            resolve(parent, args) {
+                return Comment.find(); // Fetch all comments from the database
+            }
+        },
+        vedios: {
+            type: new GraphQLList(VedioType),
+            resolve(parent, args) {
+                return Vedio.find(); // Fetch all videos from the database
             }
         }
     }
